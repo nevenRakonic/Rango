@@ -2,9 +2,17 @@
 {% load static %}
 
 {% block body_block %}
-
+    <div class="hero-unit">
 
         <h1>Rango says...</h1>
         this gun be about page<br />        
         <img src="{% static 'rango2.jpg' %}" />
+
+        {% if visits %}
+        <p>You have visited {{ visits }} times.</p>
+        {% else %}
+        <p>This is your first visit!<p>
+        {% endif %}
+    </div>
+
 {% endblock %}

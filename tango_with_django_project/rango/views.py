@@ -5,6 +5,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from rango.models import Category, Page
 from rango.forms import CategoryForm, PageForm, UserForm, UserProfileForm
+from datetime import datetime
 
 #### HELPER FUNCTIONS ###
 
@@ -30,14 +31,31 @@ def index(request):
     page_list = Page.objects.order_by('-views')[:5]    
     context_dict["pages"] =  page_list
 
+    if request.session.get('last_visit'):        
+        last_visit_time = request.session.get('last_visit')
+        visits = request.session.get('visits', 0)
+
+        if (datetime.now() - datetime.strptime(last_visit_time[:-7], "%Y-%m-%d %H:%M:%S")).days > 0:
+            request.session['visits'] = visits + 1
+            request.session['last_visit'] = str(datetime.now())
+
+    else:
+        request.session['visits'] = 1
+        request.session['last_visit'] = str(datetime.now())
+
     # Return a rendered response to send to the client.
-    # We make use of the shortcut function to make our lives easier.
-    # Note that the first parameter is the template we wish to use.
     return render_to_response('rango/index.html', context_dict, context)
+
+
 
 def about_page(request):
     context = RequestContext(request)
-    return render_to_response('rango/about.html', context)
+    context_dict = {}
+    if request.session.get('last_visit'):
+        visits = request.session.get('visits')
+        context_dict['visits'] = visits
+
+    return render_to_response('rango/about.html', context_dict, context)
 
 def category(request, category_name_url):
     context = RequestContext(request)
