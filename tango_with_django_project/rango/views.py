@@ -1,3 +1,4 @@
+from rango.bing_search import run_query
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext
 from django.shortcuts import render_to_response
@@ -184,6 +185,18 @@ def user_logout(request):
     logout(request)
 
     return HttpResponseRedirect('/rango/')
+
+def search(request):
+    context = RequestContext(request)
+    result_list = []
+
+    if request.method == 'POST':
+        query = request.POST['query'].strip()
+
+        if query:
+            result_list = run_query(query)
+
+    return render_to_response('rango/search.html', {'result_list': result_list}, context)
 
 
 
