@@ -64,7 +64,8 @@ MEDIA_ROOT = os.path.join(PROJECT_PATH, 'media/')
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
 # Examples: "http://example.com/media/", "http://media.example.com/"
-MEDIA_URL = os.path.join(PROJECT_PATH, 'media/')
+MEDIA_URL = 'media/'
+#os.path.join(PROJECT_PATH, 'media/')
 
 #URL that handles login
 LOGIN_URL = '/rango/login/'

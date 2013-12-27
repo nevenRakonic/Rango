@@ -1,5 +1,6 @@
 import json
 import urllib, urllib2
+import argparse
 
 def run_query(search_terms):
     root_url = 'https://api.datamarket.azure.com/Bing/Search/'
@@ -46,8 +47,13 @@ def run_query(search_terms):
     return results
 
 def main():
-    results = run_query('test')
+    parser = argparse.ArgumentParser()
+    parser.add_argument("query", help="type in the query")
+    args = parser.parse_args()
+    results = run_query(args.query)
     for result in results:
+        print "-----------------------"
+        print result['title']
         print "-----------------------"
         print result['summary']
 

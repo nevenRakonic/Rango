@@ -4,7 +4,8 @@ from django.template import RequestContext
 from django.shortcuts import render_to_response
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from rango.models import Category, Page
+from django.contrib.auth.models import User
+from rango.models import Category, Page, UserProfile
 from rango.forms import CategoryForm, PageForm, UserForm, UserProfileForm
 from datetime import datetime
 
@@ -16,18 +17,23 @@ def decode_url(url):
 def encode_url(url):
     return url.replace(' ','_')
 
+def get_category_list():
+    category_list = Category.objects.order_by('-likes')[:5]
+    for category in category_list:
+        category.url = encode_url(category.name)
+
+    return category_list
+
+
 ### VIEWS ###
 
 def index(request):
     # Request the context of the request.
     # The context contains information such as the client's machine details, for example.
-    context = RequestContext(request)
+    context = RequestContext(request)    
 
-    category_list = Category.objects.order_by('-likes')[:5]
-    context_dict = {'categories': category_list}
-
-    for category in category_list:
-        category.url = encode_url(category.name)
+    category_list = get_category_list()
+    context_dict = {'cat_list': category_list}
 
     page_list = Page.objects.order_by('-views')[:5]    
     context_dict["pages"] =  page_list
@@ -42,7 +48,7 @@ def index(request):
 
     else:
         request.session['visits'] = 1
-        request.session['last_visit'] = str(datetime.now())
+        request.session['last_visit'] = str(datetime.now())       
 
     # Return a rendered response to send to the client.
     return render_to_response('rango/index.html', context_dict, context)
@@ -61,7 +67,8 @@ def about_page(request):
 def category(request, category_name_url):
     context = RequestContext(request)
     category_name = decode_url(category_name_url)
-    context_dict = {'category_name': category_name, 'category_name_url': category_name_url}
+    category_list = get_category_list()
+    context_dict = {'cat_list': category_list, 'category_name': category_name,'category_name_url': category_name_url}
 
     try:
         category = Category.objects.get(name=category_name)
@@ -70,6 +77,13 @@ def category(request, category_name_url):
         context_dict['pages'] = pages
     except Category.DoesNotExist:
         pass
+
+    if request.method == 'POST':
+        query = request.POST['query'].strip()
+
+        if query:
+            result_list = run_query(query)
+            context_dict['result_list'] = result_list
 
     return render_to_response('rango/category.html', context_dict, context)
 
@@ -186,17 +200,39 @@ def user_logout(request):
 
     return HttpResponseRedirect('/rango/')
 
-def search(request):
+@login_required
+def profile(request):
+    context = RequestContext(request)    
+    
+    user = User.objects.get(username=request.user)
+    try:
+        userprofile = UserProfile.objects.get(user=user)
+    except:
+        userprofile = None
+    
+    return render_to_response('rango/profile.html', {'user': user, 'userprofile': userprofile}, context)
+
+def track_url(request):
     context = RequestContext(request)
-    result_list = []
 
-    if request.method == 'POST':
-        query = request.POST['query'].strip()
+    if request.method == 'GET':
+        if 'page_id' in request.GET:
+            page_id = request.GET['page_id']
 
-        if query:
-            result_list = run_query(query)
+            try:
+                page = Page.objects.get(id=page_id)
+                page.views += 1
+                page.save()
+                return HttpResponseRedirect(page.url) 
+            except:
+                pass       
 
-    return render_to_response('rango/search.html', {'result_list': result_list}, context)
+    return HttpResponseRedirect('/rango/') 
+
+
+
+
+
 
 
 
