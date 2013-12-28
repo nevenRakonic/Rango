@@ -1,8 +1,10 @@
-{% if cat_list %}
-<h2>Top Five Categories</h2>
-<ul>
-    {% for cat in cat_list %}
-    <li><a href="/rango/category/{{ cat.url }}">{{ cat.name }}</a></li>
-    {% endfor %}
+<ul class="nav nav-list">
+    {% if cat_list %}
+    <h2>Top Five Categories</h2>
+    <ul>
+        {% for cat in cat_list %}
+        <li><a href="/rango/category/{{ cat.url }}">{{ cat.name }}</a></li>
+        {% endfor %}
+    </ul>
+    {% endif %}
 </ul>
-{% endif %}
